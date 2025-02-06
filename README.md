@@ -1,3 +1,67 @@
+# README: VejmanDispatcher
+
+## Overview
+This script is responsible for fetching cases from an external API, dispatching them as queue elements for further processing, and managing their corresponding SharePoint folders. It ensures that outdated cases that have not been updated in the last 30 days are removed from both the database and SharePoint.
+
+## Features
+- **Fetch cases** from an external API using authentication.
+- **Check for existing cases** in the SQL Server database.
+- **Create or rename SharePoint folders** based on case details.
+- **Update metadata** in the SQL Server database.
+- **Dispatch cases as queue elements** to the Orchestrator queue.
+- **Remove outdated cases and folders** that have not been updated for 30 days.
+
+## Dependencies
+This script requires the following Python libraries:
+- `OpenOrchestrator` (for Orchestrator connection)
+- `pyodbc` (for SQL Server connection)
+- `requests` (for HTTP requests)
+- `office365` (for SharePoint interactions)
+- `time`, `datetime`, `os`, `json`, and `re` (for various utilities)
+
+## Process Flow
+### 1. Authentication & Setup
+- Retrieve credentials for **SharePoint** and **API access**.
+- Establish a connection to **SQL Server**.
+- Authenticate with **SharePoint**.
+
+### 2. Fetch Cases from API
+- Construct a **URL** to fetch cases with the required parameters.
+- Perform an **HTTP GET request** and parse the JSON response.
+- Extract **relevant case information**.
+
+### 3. Process Cases
+For each case:
+1. Check if the case exists in the database:
+   - If the case exists, update its **SharePoint folder** (if needed) and its **last updated timestamp**.
+   - If the case does not exist, **create a new SharePoint folder** and insert the case into the database.
+2. Construct a **JSON payload** for queue processing.
+3. Dispatch the **case to the queue** in Orchestrator.
+
+### 4. Cleanup of Old Cases
+- Identify cases **not updated in the last 30 days**.
+- Recursively delete their **SharePoint folders**.
+- Remove corresponding entries from the **SQL database**.
+
+## Database Structure
+**Table: [dbo].[VejmanTilladelser]**
+
+| Column          | Type  | Description |
+|----------------|-------|-------------|
+| ID            | INT   | Unique case identifier |
+| CaseNumber    | VARCHAR | Case number |
+| SharePointFolder | VARCHAR | SharePoint folder path |
+| LastUpdated   | DATETIME | Last updated timestamp |
+
+## Error Handling & Logging
+- The script **logs important actions** (authentication, API requests, SharePoint operations, SQL updates).
+- Errors during API requests, SQL operations, or SharePoint actions will be handled by OpenOrchestrator.
+
+## Notes
+- Review logs for any authentication or permission errors.
+- Consider implementing additional **error handling** if needed.
+
+
 # Robot-Framework V3
 
 This repo is meant to be used as a template for robots made for [OpenOrchestrator](https://github.com/itk-dev-rpa/OpenOrchestrator).
