@@ -44,7 +44,8 @@ def delete_sharepoint_folder(folder_path: str, ctx: ClientContext, orchestrator_
         delete_sharepoint_folder(subfolder.serverRelativeUrl, ctx, orchestrator_connection)
 
     # Now delete the folder itself
-    target_folder.delete_object()
+    if not folder_path == 'Delte dokumenter/Tilladelser':
+        target_folder.delete_object()
     ctx.execute_query()
 
     orchestrator_connection.log_info(f"Folder deleted: {folder_path}")
@@ -56,7 +57,7 @@ password = RobotCredentials.password
 
 token = orchestrator_connection.get_credential("VejmanToken").password
 
-SharePointTopFolder = "Delte dokumenter/TestTilladelser"
+SharePointTopFolder = "Delte dokumenter/Tilladelser"
 
 sharepoint_site_base = orchestrator_connection.get_constant("AarhusKommuneSharePoint").value
 sharepoint_site = f"{sharepoint_site_base}/teams/tea-teamsite10014"
