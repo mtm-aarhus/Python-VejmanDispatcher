@@ -88,7 +88,7 @@ password = RobotCredentials.password
 
 token = orchestrator_connection.get_credential("VejmanToken").password
 
-SharePointTopFolder = "Delte dokumenter/TestTilladelser"
+SharePointTopFolder = "Delte dokumenter/Tilladelser"
 
 today = datetime.today().strftime('%Y-%m-%d')
 future_date = (datetime.today()+timedelta(days=4)).strftime('%Y-%m-%d')
