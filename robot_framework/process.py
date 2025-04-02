@@ -136,7 +136,14 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
         orchestrator_connection.log_info(f"Deleting old SharePoint folder: {folder_path}")
 
         # Delete folder in SharePoint (recursive)
-        delete_sharepoint_folder(folder_path, ctx, orchestrator_connection)
+        try:
+            delete_sharepoint_folder(folder_path, ctx, orchestrator_connection)
+        except:
+            orchestrator_connection.log_info("Failed deleting folder, trying to recreate client")
+            ctx = None
+            ctx = sharepoint_client(username, password, sharepoint_site, orchestrator_connection)
+            delete_sharepoint_folder(folder_path, ctx, orchestrator_connection)
+
 
         # Delete row from SQL Server
         cursor.execute("""
