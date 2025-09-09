@@ -17,9 +17,6 @@ import re
 def process(orchestrator_connection: OrchestratorConnection, queue_element: QueueElement | None = None) -> None:
     """Do the primary process of the robot."""
     orchestrator_connection.log_trace("Running process.")
-    RobotCredentials = orchestrator_connection.get_credential("Robot365User")
-    username = RobotCredentials.username
-    password = RobotCredentials.password
 
     token = orchestrator_connection.get_credential("VejmanToken").password
 
@@ -43,7 +40,16 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     sharepoint_site_base = orchestrator_connection.get_constant("AarhusKommuneSharePoint").value
     sharepoint_site = f"{sharepoint_site_base}/teams/tea-teamsite10014"
 
-    ctx = sharepoint_client(username, password, sharepoint_site, orchestrator_connection)
+    certification = orchestrator_connection.get_credential("SharePointCert")
+    api = orchestrator_connection.get_credential("SharePointAPI")
+    
+    tenant = api.username
+    client_id = api.password
+    thumbprint = certification.username
+    cert_path = certification.password
+    
+    ctx = sharepoint_client(tenant, client_id, thumbprint, cert_path, sharepoint_site, orchestrator_connection)
+
     # Extract cases
     cases = json_data.get("cases", [])
 
@@ -141,7 +147,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
         except:
             orchestrator_connection.log_info("Failed deleting folder, trying to recreate client")
             ctx = None
-            ctx = sharepoint_client(username, password, sharepoint_site, orchestrator_connection)
+            ctx = sharepoint_client(tenant, client_id, thumbprint, cert_path, sharepoint_site, orchestrator_connection)
             delete_sharepoint_folder(folder_path, ctx, orchestrator_connection)
 
 
@@ -158,12 +164,18 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     cursor.close()
     conn.close()
 
-def sharepoint_client(username: str, password: str, sharepoint_site_url: str, orchestrator_connection: OrchestratorConnection) -> ClientContext:
+def sharepoint_client(tenant: str, client_id: str, thumbprint: str, cert_path: str, sharepoint_site_url: str, orchestrator_connection: OrchestratorConnection) -> ClientContext:
     """
     Creates and returns a SharePoint client context.
     """
     # Authenticate to SharePoint
-    ctx = ClientContext(sharepoint_site_url).with_credentials(UserCredential(username, password))
+    cert_credentials = {
+        "tenant": tenant,
+        "client_id": client_id,
+        "thumbprint": thumbprint,
+        "cert_path": cert_path
+    }
+    ctx = ClientContext(sharepoint_site_url).with_client_certificate(**cert_credentials)
 
     # Load and verify connection
     web = ctx.web
